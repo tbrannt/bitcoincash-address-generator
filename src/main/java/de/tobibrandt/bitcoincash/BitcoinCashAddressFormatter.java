@@ -1,6 +1,7 @@
 package de.tobibrandt.bitcoincash;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import de.tobibrandt.MoneyNetwork;
 import de.tobibrandt.Utils;
@@ -39,6 +40,39 @@ public class BitcoinCashAddressFormatter {
 		checksumBytes = BitcoinCashBitArrayConverter.convertBits(checksumBytes, 8, 5, true);
 		String cashAddress = BitcoinCashBase32.encode(Utils.concatenateByteArrays(payloadBytes, checksumBytes));
 		return prefixString + SEPARATOR + cashAddress;
+	}
+
+	public static BitcoinCashAddressDecodedParts decodeCashAddress(String bitcoinCashAddress, MoneyNetwork network) {
+		if (!isValidCashAddress(bitcoinCashAddress, network)) {
+			throw new RuntimeException("Address wasn't valid: " + bitcoinCashAddress);
+		}
+
+		BitcoinCashAddressDecodedParts decoded = new BitcoinCashAddressDecodedParts();
+		String[] addressParts = bitcoinCashAddress.split(SEPARATOR);
+		if (addressParts.length == 2) {
+			decoded.setPrefix(addressParts[0]);
+		}
+
+		byte[] addressData = BitcoinCashBase32.decode(addressParts[1]);
+		addressData = Arrays.copyOfRange(addressData, 0, addressData.length - 8);
+		addressData = BitcoinCashBitArrayConverter.convertBits(addressData, 5, 8, true);
+		byte versionByte = addressData[0];
+		byte[] hash = Arrays.copyOfRange(addressData, 1, addressData.length);
+
+		decoded.setAddressType(getAddressTypeFromVersionByte(versionByte));
+		decoded.setHash(hash);
+
+		return decoded;
+	}
+
+	private static BitcoinCashAddressType getAddressTypeFromVersionByte(byte versionByte) {
+		for (BitcoinCashAddressType addressType : BitcoinCashAddressType.values()) {
+			if (addressType.getVersionByte() == versionByte) {
+				return addressType;
+			}
+		}
+
+		throw new RuntimeException("Unknown version byte: " + versionByte);
 	}
 
 	public static boolean isValidCashAddress(String bitcoinCashAddress, MoneyNetwork moneyNetwork) {
