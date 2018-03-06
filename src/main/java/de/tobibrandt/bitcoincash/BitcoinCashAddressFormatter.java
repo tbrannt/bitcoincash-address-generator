@@ -76,33 +76,37 @@ public class BitcoinCashAddressFormatter {
 	}
 
 	public static boolean isValidCashAddress(String bitcoinCashAddress, MoneyNetwork moneyNetwork) {
-		String prefix;
-		if (bitcoinCashAddress.contains(SEPARATOR)) {
-			String[] split = bitcoinCashAddress.split(SEPARATOR);
-			prefix = split[0];
-			bitcoinCashAddress = split[1];
+		try {
+			String prefix;
+			if (bitcoinCashAddress.contains(SEPARATOR)) {
+				String[] split = bitcoinCashAddress.split(SEPARATOR);
+				prefix = split[0];
+				bitcoinCashAddress = split[1];
 
-			if (MAIN_NET_PREFIX.equals(prefix) && !moneyNetwork.equals(MoneyNetwork.MAIN)) {
-				return false;
+				if (MAIN_NET_PREFIX.equals(prefix) && !moneyNetwork.equals(MoneyNetwork.MAIN)) {
+					return false;
+				}
+				if (TEST_NET_PREFIX.equals(prefix) && !moneyNetwork.equals(MoneyNetwork.TEST)) {
+					return false;
+				}
+			} else {
+				prefix = moneyNetwork == MoneyNetwork.MAIN ? MAIN_NET_PREFIX : TEST_NET_PREFIX;
 			}
-			if (TEST_NET_PREFIX.equals(prefix) && !moneyNetwork.equals(MoneyNetwork.TEST)) {
-				return false;
-			}
-		} else {
-			prefix = moneyNetwork == MoneyNetwork.MAIN ? MAIN_NET_PREFIX : TEST_NET_PREFIX;
-		}
 
-		if (!isSingleCase(bitcoinCashAddress))
+			if (!isSingleCase(bitcoinCashAddress))
+				return false;
+
+			bitcoinCashAddress = bitcoinCashAddress.toLowerCase();
+
+			byte[] checksumData = Utils.concatenateByteArrays(
+					Utils.concatenateByteArrays(getPrefixBytes(prefix, moneyNetwork), new byte[] { 0x00 }),
+					BitcoinCashBase32.decode(bitcoinCashAddress));
+
+			byte[] calculateChecksumBytesPolymod = calculateChecksumBytesPolymod(checksumData);
+			return new BigInteger(calculateChecksumBytesPolymod).compareTo(BigInteger.ZERO) == 0;
+		} catch (RuntimeException re) {
 			return false;
-
-		bitcoinCashAddress = bitcoinCashAddress.toLowerCase();
-
-		byte[] checksumData = Utils.concatenateByteArrays(
-				Utils.concatenateByteArrays(getPrefixBytes(prefix, moneyNetwork), new byte[] { 0x00 }),
-				BitcoinCashBase32.decode(bitcoinCashAddress));
-
-		byte[] calculateChecksumBytesPolymod = calculateChecksumBytesPolymod(checksumData);
-		return new BigInteger(calculateChecksumBytesPolymod).compareTo(BigInteger.ZERO) == 0;
+		}
 	}
 
 	private static boolean isSingleCase(String bitcoinCashAddress) {
@@ -118,8 +122,8 @@ public class BitcoinCashAddressFormatter {
 
 	/**
 	 * @param checksumInput
-	 * @return Returns a 40 bits checksum in form of 5 8-bit arrays. This still
-	 *         has to me mapped to 5-bit array representation
+	 * @return Returns a 40 bits checksum in form of 5 8-bit arrays. This still has
+	 *         to me mapped to 5-bit array representation
 	 */
 	private static byte[] calculateChecksumBytesPolymod(byte[] checksumInput) {
 		BigInteger c = BigInteger.ONE;
