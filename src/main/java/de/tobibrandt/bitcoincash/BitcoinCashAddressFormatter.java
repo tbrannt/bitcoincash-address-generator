@@ -77,16 +77,28 @@ public class BitcoinCashAddressFormatter {
 
 	public static boolean isValidCashAddress(String bitcoinCashAddress, MoneyNetwork moneyNetwork) {
 		try {
+			if (bitcoinCashAddress == null || bitcoinCashAddress.length() == 0) {
+				return false;
+			}
 			String prefix;
 			if (bitcoinCashAddress.contains(SEPARATOR)) {
 				String[] split = bitcoinCashAddress.split(SEPARATOR);
+
+				if (split.length != 2) {
+					return false;
+				}
+
 				prefix = split[0];
 				bitcoinCashAddress = split[1];
 
-				if (MAIN_NET_PREFIX.equals(prefix) && !moneyNetwork.equals(MoneyNetwork.MAIN)) {
+				if (moneyNetwork.equals(MoneyNetwork.MAIN) && !MAIN_NET_PREFIX.equals(prefix.toLowerCase())) {
 					return false;
 				}
-				if (TEST_NET_PREFIX.equals(prefix) && !moneyNetwork.equals(MoneyNetwork.TEST)) {
+				if (moneyNetwork.equals(MoneyNetwork.TEST) && !TEST_NET_PREFIX.equals(prefix.toLowerCase())) {
+					return false;
+				}
+
+				if (!isSingleCase(prefix)) {
 					return false;
 				}
 			} else {
