@@ -91,11 +91,16 @@ public class BitcoinCashAddressFormatter {
 				prefix = split[0];
 				bitcoinCashAddress = split[1];
 
-				if (moneyNetwork.equals(MoneyNetwork.MAIN) && !MAIN_NET_PREFIX.equals(prefix.toLowerCase())) {
-					return false;
-				}
-				if (moneyNetwork.equals(MoneyNetwork.TEST) && !TEST_NET_PREFIX.equals(prefix.toLowerCase())) {
-					return false;
+				if (moneyNetwork.equals(MoneyNetwork.MAIN)) {
+					if (!MAIN_NET_PREFIX.equals(prefix.toLowerCase())) {
+						return false;
+					}
+				} else if (moneyNetwork.equals(MoneyNetwork.TEST)) {
+					if (!TEST_NET_PREFIX.equals(prefix.toLowerCase())) {
+						return false;
+					}
+				} else {
+					throw new RuntimeException("Unhandled MoneyNetwork: " + moneyNetwork);
 				}
 
 				if (!isSingleCase(prefix)) {
