@@ -55,14 +55,14 @@ public class BitcoinCashAddressFormatterTests {
 
 	@Test
 	public void testChecksumTestsFromSpec() {
-		assertTrue(BitcoinCashAddressFormatter.isValidCashAddress("prefix:x64nx6hz", MoneyNetwork.MAIN));
-		assertTrue(BitcoinCashAddressFormatter.isValidCashAddress("p:gpf8m4h7", MoneyNetwork.MAIN));
+		assertFalse(BitcoinCashAddressFormatter.isValidCashAddress("prefix:x64nx6hz", MoneyNetwork.MAIN));
+		assertFalse(BitcoinCashAddressFormatter.isValidCashAddress("p:gpf8m4h7", MoneyNetwork.MAIN));
 		assertTrue(BitcoinCashAddressFormatter
 				.isValidCashAddress("bitcoincash:qpzry9x8gf2tvdw0s3jn54khce6mua7lcw20ayyn", MoneyNetwork.MAIN));
 		assertFalse(
 				BitcoinCashAddressFormatter.isValidCashAddress("bchtest:testnetaddress4d6njnut", MoneyNetwork.MAIN));
 		assertTrue(BitcoinCashAddressFormatter.isValidCashAddress("bchtest:testnetaddress4d6njnut", MoneyNetwork.TEST));
-		assertTrue(BitcoinCashAddressFormatter
+		assertFalse(BitcoinCashAddressFormatter
 				.isValidCashAddress("bchreg:555555555555555555555555555555555555555555555udxmlmrz", MoneyNetwork.MAIN));
 	}
 
